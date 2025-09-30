@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disaster Guard AI - Dashboard</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <!-- Load Leaflet CSS (for GIS/Map simulation) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        /* Custom styles for the app */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1e293b; /* Dark blue background */
+            color: #f8fafc;
+        }
+        #map {
+            height: 400px; /* Fixed height for the map */
+            width: 100%;
+            border-radius: 0.75rem; /* rounded-xl */
+        }
+        .card {
+            background-color: #334155; /* Slightly lighter card background */
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        .alert-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+        .icon-warn {
+            color: #f59e0b; /* Amber */
+        }
+        .icon-danger {
+            color: #ef4444; /* Red */
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="min-h-screen p-4 md:p-8">
+        <!-- Header -->
+        <header class="mb-8 flex items-center justify-between">
+            <h1 class="text-3xl font-extrabold text-white">
+                Disaster Guard AI <span class="text-green-400">Dashboard</span>
+            </h1>
+            <div class="text-sm font-medium text-gray-400">
+                Team Sahana & Team - 25139
+            </div>
+        </header>
+
+        <!-- Main Dashboard Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Column 1: Map and Key Metrics (Larger section) -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Map View (Simulating GIS) -->
+                <div class="card">
+                    <h2 class="text-xl font-semibold mb-3 border-b border-gray-600 pb-2">Real-Time Situational Alert (GIS)</h2>
+                    <div id="map"></div>
+                    <div class="text-sm text-gray-400 mt-2">
+                        Map simulates real-time data from Sensor Networks & Remote Sensing.
+                    </div>
+                </div>
+
+                <!-- Resource Metrics (Optimized Response Simulation) -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div class="card bg-blue-600/20 border-l-4 border-blue-400">
+                        <p class="text-sm text-blue-300">Total Teams Deployed</p>
+                        <p id="metric-teams" class="text-3xl font-bold mt-1 text-blue-200">25</p>
+                    </div>
+                    <div class="card bg-amber-600/20 border-l-4 border-amber-400">
+                        <p class="text-sm text-amber-300">Unconfirmed Incidents</p>
+                        <p id="metric-incidents" class="text-3xl font-bold mt-1 text-amber-200">4</p>
+                    </div>
+                    <div class="card bg-green-600/20 border-l-4 border-green-400">
+                        <p class="text-sm text-green-300">Critical Resource Stock</p>
+                        <p id="metric-resources" class="text-3xl font-bold mt-1 text-green-200">88%</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 2: Predictive Analytics and Alerts -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Predictive Alerts -->
+                <div class="card">
+                    <h2 class="text-xl font-semibold mb-3 border-b border-gray-600 pb-2 flex justify-between items-center">
+                        <span>Predictive Analytics & Early Warning</span>
+                        <span class="text-xs font-normal text-amber-400/80">(ML Models)</span>
+                    </h2>
+                    <div id="alerts-container" class="space-y-3 max-h-96 overflow-y-auto">
+                        <!-- Alerts will be inserted here by JavaScript -->
+                        <div class="alert-item bg-emerald-700/30 border border-emerald-500">
+                            <svg class="w-5 h-5 mr-3 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <p class="text-sm">System operational check complete.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actionable Recommendations -->
+                <div class="card">
+                    <h2 class="text-xl font-semibold mb-3 border-b border-gray-600 pb-2">Actionable Recommendations</h2>
+                    <ul class="list-disc list-inside space-y-3 text-sm text-gray-300">
+                        <li>Pre-position 5 rescue boats near River Zone B (70% Flood Risk).</li>
+                        <li>Verify communication links for teams 105 and 106 (Social Media NLP flagged outage).</li>
+                        <li>Prioritize helicopter reconnaissance over Sector 4 (Post-Disaster Damage Report).</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+        // Use a secure pattern to get the app ID, though not used for Firestore here.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'disaster-guard-ai';
+
+        // --- MAP INITIALIZATION (GIS Simulation) ---
+        let map;
+        try {
+            map = L.map('map').setView([15.3647, 75.1240], 10); // Center near Karnataka/Goa border (example location)
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Simulated disaster zone marker (e.g., predicted flood zone)
+            L.marker([15.4647, 75.0240]).addTo(map)
+                .bindPopup('<b>High Flood Risk Zone</b><br>ML Prediction: 85%')
+                .openPopup();
+
+            // Simulated resource center
+            L.circle([15.3000, 75.2500], {
+                color: 'blue',
+                fillColor: '#3498db',
+                fillOpacity: 0.5,
+                radius: 5000 // 5km radius
+            }).addTo(map).bindPopup('Regional Command Center');
+
+        } catch (e) {
+            console.error("Leaflet Map failed to initialize:", e);
+            document.getElementById('map').innerHTML = '<div class="text-red-400 p-4">Error: Map library failed to load. Displaying static data view.</div>';
+        }
+
+        // --- DATA SIMULATION (ML and Real-Time Data) ---
+        const alertsContainer = document.getElementById('alerts-container');
+        const metricTeams = document.getElementById('metric-teams');
+        const metricIncidents = document.getElementById('metric-incidents');
+        const metricResources = document.getElementById('metric-resources');
+
+        const initialAlerts = [
+            { type: 'warning', message: 'Heavy Rainfall Alert (Zone B) - Begin pre-positioning.', icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.3 16c-.77 1.333.192 3 1.732 3z' },
+            { type: 'danger', message: 'Bridge collapse confirmed by drone feed (ID #421). Divert traffic.', icon: 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+            { type: 'info', message: 'Social media sentiment analysis shows high panic in Sector 3.', icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' }
+        ];
+
+        // Function to create an alert DOM element
+        function createAlertElement(alert) {
+            const el = document.createElement('div');
+            const colorClass = alert.type === 'danger' ? 'bg-red-700/30 border border-red-500' :
+                               alert.type === 'warning' ? 'bg-amber-700/30 border border-amber-500' :
+                               'bg-blue-700/30 border border-blue-500';
+            const iconColor = alert.type === 'danger' ? 'text-red-300' :
+                              alert.type === 'warning' ? 'text-amber-300' :
+                              'text-blue-300';
+
+            el.className = `alert-item ${colorClass} transition-all duration-500 ease-in-out`;
+            el.innerHTML = `
+                <svg class="w-5 h-5 mr-3 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${alert.icon}"></path>
+                </svg>
+                <p class="text-sm">${alert.message}</p>
+            `;
+            return el;
+        }
+
+        // Display initial alerts (reverse order for newer alerts on top)
+        [...initialAlerts].reverse().forEach(alert => {
+            alertsContainer.prepend(createAlertElement(alert));
+        });
+
+        // --- Real-Time Simulation Loop (like data pushing from Cloud/ML) ---
+        let currentTeams = 25;
+        let currentIncidents = 4;
+        let updateCount = 0;
+
+        const allAlerts = [
+            { type: 'warning', message: 'Evacuation advisory issued for low-lying areas in Sector 5.', icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.3 16c-.77 1.333.192 3 1.732 3z' },
+            { type: 'danger', message: 'Immediate Rescue Needed: 3 people reported trapped on rooftop.', icon: 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+            { type: 'info', message: 'First responder team 101 marked "Safe" and en route to Command Post.', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' }
+        ];
+
+        function simulateUpdate() {
+            // 1. Update Metrics (Optimized Response)
+            if (Math.random() > 0.6) {
+                currentTeams += Math.floor(Math.random() * 3) + 1; // More teams deployed
+                metricTeams.textContent = currentTeams;
+            }
+            if (currentIncidents > 0 && Math.random() > 0.5) {
+                currentIncidents -= 1; // Incident resolved
+                metricIncidents.textContent = currentIncidents;
+            } else if (Math.random() > 0.7) {
+                 currentIncidents += 1; // New incident reported
+                metricIncidents.textContent = currentIncidents;
+            }
+            // Keep resources stable for simplicity
+            
+            // 2. Add New Predictive Alert (Predictive Analytics)
+            if (updateCount < allAlerts.length) {
+                const newAlert = allAlerts[updateCount];
+                const alertElement = createAlertElement(newAlert);
+                
+                // Animate insertion
+                alertElement.style.opacity = '0';
+                alertsContainer.prepend(alertElement);
+                alertsContainer.scrollTop = 0; // Scroll to top if container overflows
+                
+                setTimeout(() => {
+                    alertElement.style.opacity = '1';
+                }, 10);
+                
+                updateCount++;
+            }
+
+            // 3. Map Update Simulation (GIS)
+            if (map && updateCount === 2) {
+                L.marker([15.5500, 75.3000]).addTo(map)
+                    .bindPopup('<b>New Incident: Fire reported</b><br>Drones R-1, R-2 deployed.')
+                    .openPopup();
+            }
+
+            // Continue the loop
+            setTimeout(simulateUpdate, 6000); // Update every 6 seconds
+        }
+
+        // Start the simulation loop only after the map has loaded
+        window.onload = function() {
+            simulateUpdate();
+        }
+
+    </script>
+    <!-- Load an appropriate icon library (e.g., Lucide or Font Awesome) if needed for production -->
+    <!-- For this prototype, we used inline SVGs which are cleaner for a single file. -->
+</body>
+</html>
